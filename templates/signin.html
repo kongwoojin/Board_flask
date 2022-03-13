@@ -57,15 +57,13 @@
 </nav>
 
 <div class="container">
+    <form class="form-signup" action="/signinpost" method="post">
+        <h1 class="h3 mb-3 font-weight-normal">Sign Up</h1>
+        <input type="text" name="userid" class="form-control" placeholder="User ID" required="" autofocus="">
+        <input type="password" name="password" class="form-control" placeholder="Password" required="">
 
-    <form method="post" action="/post">
-        <div class="form-group row">
-            <input class="col-md-9 form-control" type="text" name="title" placeholder="Title">
-            <textarea class="col-12 form-control" type="text" name="text" placeholder="Text"></textarea>
-            <button class="btn btn-primary btn-block" type="submit">Write</button>
-        </div>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
     </form>
-
 </div>
 
 </body>

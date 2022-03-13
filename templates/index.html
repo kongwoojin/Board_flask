@@ -30,10 +30,28 @@
                 <li class="nav-item">
                     <a class="nav-link active" aria-current="page" href="#">Home</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/write">Write</a>
-                </li>
+                {% if session['id'] != "" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/write">Write</a>
+                    </li>
+                {% endif %}
+
             </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                {% if session['id'] == "" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signin">Sign in</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Sign up</a>
+                    </li>
+                {% elif session['id'] != "" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signout">Sign out</a>
+                    </li>
+                {% endif %}
+            </ul>
+
         </div>
     </div>
 </nav>
