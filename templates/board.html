@@ -58,11 +58,14 @@
 
 <div class="container">
     <h1>{{ data.title }}</h1>
+    <h4>{{ data.view_count }}</h4>
     <div class="card">
         <div class="card-body">
             {{ data.text }}
         </div>
     </div>
+
+    <a href="/edit/{{ data.id }}">수정</a>
 
 </div>
 
