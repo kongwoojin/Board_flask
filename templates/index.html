@@ -64,6 +64,7 @@
             <th scope="col">Title</th>
             <th scope="col">Writer</th>
             <th scope="col">Date</th>
+            <th scope="col">View</th>
         </tr>
         </thead>
 
@@ -72,8 +73,9 @@
             <tr>
                 <td>{{ data.id }}</td>
                 <td><a href="/board/{{ data.id }}">{{ data.title }}</a></td>
-                <td>{{ data.writerId }}</td>
+                <td>{{ data.username }}</td>
                 <td>{{ data.date }}</td>
+                <td>{{ data.view_count }}</td>
             </tr>
         {% endfor %}
         </tbody>

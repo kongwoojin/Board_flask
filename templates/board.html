@@ -59,6 +59,7 @@
 <div class="container">
     <h1>{{ data.title }}</h1>
     <h4>{{ data.view_count }}</h4>
+    <h5>{{ data.username }}</h5>
     <div class="card">
         <div class="card-body">
             {{ data.text }}
@@ -66,6 +67,19 @@
     </div>
 
     <a href="/edit/{{ data.id }}">수정</a>
+
+    {% for comment in comments %}
+        <br>
+        {{ comment.id }} {{ comment.comment }} {{ comment.writer }}
+    {% endfor %}
+
+
+    <form method="post" action="/comment">
+        <div class="form-group row">
+            <textarea class="col-12 form-control" type="text" name="comment" placeholder="comment"></textarea>
+            <button class="btn btn-primary btn-block" type="submit">Write</button>
+        </div>
+    </form>
 
 </div>
 

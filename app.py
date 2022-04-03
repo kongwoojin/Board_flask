@@ -6,6 +6,10 @@ import pymysql
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from flask_bcrypt import Bcrypt
 
+# Features needed
+# Delete article
+# Redesign
+
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
@@ -16,11 +20,19 @@ conn = pymysql.connect(
     passwd='',
     host='',
     db='',
-    charset='utf8',
+    charset='',
     port=3306
 )
 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+
+def getUserName(id):
+    sql = f'select * from users where id = {id}'
+    cursor.execute(sql)
+    result = cursor.fetchone()
+
+    return result['username']
 
 
 @app.route('/')
@@ -36,7 +48,8 @@ def index():
             'id': obj['id'],
             'title': obj['title'],
             'username': obj['username'],
-            'date': obj['date']
+            'date': obj['date'],
+            'view_count': obj['view_count']
         }
         data_list.append(data_dic)
 
@@ -57,13 +70,27 @@ def board(id):
     data = {
         'title': result[0]['title'],
         'text': result[0]['text'],
-        'username': result[0]['username'],
+        'username': result[0]['writer_id'],
         'date': result[0]['date'],
         'view_count': result[0]['view_count'],
         'id': result[0]['id']
     }
 
-    return render_template('board.html', data=data)
+    sql = f'SELECT * FROM `comments` where article_id ={id};'
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+    comments = []
+
+    for obj in result:
+        comments_dic = {
+            'writer': getUserName(obj['writer_id']),
+            'comment': obj['comment'],
+            'id': obj['id']
+        }
+        comments.append(comments_dic)
+
+    return render_template('board.html', data=data, comments=comments)
 
 
 @app.route('/write')
@@ -106,6 +133,20 @@ def post():
     conn.commit()
 
     return redirect(url_for("index"))
+
+
+@app.route('/comment', methods=['POST'])
+def comment():
+    comment = request.form.get('comment')
+    writer_id = int(session['id'])
+    article_id = int(request.referrer.split('/')[-1])
+
+    sql = f'INSERT INTO comments(comment, article_id, reply_to, writer_id) ' \
+          f'VALUES("{comment}", "{article_id}", 0, {writer_id})'
+    cursor.execute(sql)
+    conn.commit()
+
+    return '<script>document.location.href = document.referrer</script>'
 
 
 @app.route('/signup')
@@ -169,6 +210,9 @@ def signinpost():
 @app.route('/signout')
 def signout():
     session['userid'] = ""
+    session['username'] = ""
+    session['id'] = ""
+
     return redirect(url_for("index"))
 
 
