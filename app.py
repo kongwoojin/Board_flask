@@ -171,6 +171,10 @@ def delete(id):
 
 @app.route('/comment', methods=['POST'])
 def comment():
+    if session['userid'] == "":
+        flash("Login first!")
+        return '<script>document.location.href = document.referrer</script>'
+
     comment = request.form.get('comment')
     writer_id = int(session['id'])
     article_id = int(request.referrer.split('/')[-1])
