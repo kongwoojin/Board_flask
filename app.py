@@ -3,28 +3,26 @@
 from datetime import datetime
 
 import pymysql
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash, escape
 from flask_bcrypt import Bcrypt
 
-# Features needed
-# Delete article
-# Redesign
+import database
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 app.secret_key = 'secret string'
 
-conn = pymysql.connect(
-    user='',
-    passwd='',
-    host='',
-    db='',
-    charset='',
-    port=3306
-)
+conn = database.dbConnection()
 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+
+def isXSSPossible(text):
+    if "alert" in text:
+        return True
+    else:
+        return False
 
 
 def getUserName(id):
@@ -37,7 +35,7 @@ def getUserName(id):
 
 @app.route('/')
 def index():
-    sql = "SELECT * FROM `article`;"
+    sql = "select * from article;"
     cursor.execute(sql)
     result = cursor.fetchall()
 
@@ -47,7 +45,7 @@ def index():
         data_dic = {
             'id': obj['id'],
             'title': obj['title'],
-            'username': obj['username'],
+            'username': getUserName(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
@@ -63,20 +61,22 @@ def board(id):
     cursor.execute(sql)
     conn.commit()
 
-    sql = f'SELECT * FROM `article` where id ={id};'
+    sql = f'select * from article where id ={id};'
     cursor.execute(sql)
-    result = cursor.fetchall()
+    result = cursor.fetchone()
 
     data = {
-        'title': result[0]['title'],
-        'text': result[0]['text'],
-        'username': result[0]['writer_id'],
-        'date': result[0]['date'],
-        'view_count': result[0]['view_count'],
-        'id': result[0]['id']
+        'title': result['title'],
+        'text': result['text'],
+        'username': getUserName(result['writer_id']),
+        'date': result['date'],
+        'view_count': result['view_count'],
+        'id': result['id']
     }
 
-    sql = f'SELECT * FROM `comments` where article_id ={id};'
+    print(escape(result['text']))
+
+    sql = f'select * from comments where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
 
@@ -103,20 +103,33 @@ def write():
 
 @app.route('/edit/<int:id>')
 def edit(id):
-    sql = f'SELECT * FROM article where id ={id};'
+    sql = f'select * from article where id ={id};'
     cursor.execute(sql)
-    result = cursor.fetchall()
+    result = cursor.fetchone()
 
-    if session['id'] != result[0]['writer_id']:
+    if session['id'] != result['writer_id']:
+        flash("No permission!")
         return redirect(url_for("index"))
 
-    return render_template('write.html')
+    sql = f'select * from article where id = {id};'
+    cursor.execute(sql)
+    result = cursor.fetchone()
+
+    if result is not None:
+        data = {
+            'title': result['title'],
+            'text': result['text']
+        }
+
+        return render_template('write.html', data=data)
+    else:
+        return render_template('write.html')
 
 
 @app.route('/post', methods=['POST'])
 def post():
     title = request.form.get('title')
-    text = request.form.get('text')
+    text = request.form.get('text').replace("\n", "<br/>")
     username = session['username']
     writer_id = int(session['id'])
 
@@ -124,14 +137,36 @@ def post():
     print(request.referrer.split('/')[-1])
 
     now = datetime.now()
-    if "edit" in request.referrer:
+    if isXSSPossible(text):
+        flash("XSS detected!")
+        return redirect(url_for("index"))
+
+    if "edit" in request.referrer:  # Edit article
         sql = f'update article set title = "{title}", text = "{text}" where id = {request.referrer.split("/")[-1]}'
-    else:
-        sql = f'INSERT INTO article(title, text, username, date, writer_id) ' \
-              f'VALUES("{title}", "{text}", "{username}", "{now.strftime("%Y-%m-%d %H:%M:%S")}", {writer_id})'
+    else:  # Write article
+        sql = f'insert into article(title, text, username, date, writer_id) ' \
+              f'values("{title}", "{text}", "{username}", "{now.strftime("%Y-%m-%d %H:%M:%S")}", {writer_id})'
     cursor.execute(sql)
     conn.commit()
 
+    return redirect(url_for("index"))
+
+
+@app.route('/delete/<int:id>', methods=['GET'])
+def delete(id):
+    sql = f'select * from article where id ={id};'
+    cursor.execute(sql)
+    result = cursor.fetchone()
+
+    if session['id'] != result['writer_id']:
+        flash("No permission!")
+        return redirect(url_for("index"))
+
+    sql = f'delete from article where id = {id}'
+    cursor.execute(sql)
+    conn.commit()
+
+    flash("Deleted!")
     return redirect(url_for("index"))
 
 
@@ -141,8 +176,8 @@ def comment():
     writer_id = int(session['id'])
     article_id = int(request.referrer.split('/')[-1])
 
-    sql = f'INSERT INTO comments(comment, article_id, reply_to, writer_id) ' \
-          f'VALUES("{comment}", "{article_id}", 0, {writer_id})'
+    sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
+          f'values("{comment}", "{article_id}", 0, {writer_id})'
     cursor.execute(sql)
     conn.commit()
 
@@ -150,12 +185,12 @@ def comment():
 
 
 @app.route('/signup')
-def signup():
+def signUp():
     return render_template('signup.html')
 
 
 @app.route('/signuppost', methods=['POST'])
-def signuppost():
+def signUpPost():
     userid = request.form.get('userid')
     password = bcrypt.generate_password_hash(request.form.get('password')).decode('utf-8')
     username = request.form.get('username')
@@ -167,48 +202,49 @@ def signuppost():
     rowCount = cursor.rowcount
 
     if rowCount != 0:
-        return '<script>alert("Exist!")</script>' \
-               '<script>document.location.href = document.referrer</script>'
+        flash("User Exist!")
+        return redirect(url_for("signUp"))
 
-    sql = f'INSERT INTO users(userid, password, username, email) ' \
-          f'VALUES("{userid}", "{password}", "{username}", "{email}")'
+    sql = f'insert into users(userid, password, username, email) ' \
+          f'values("{userid}", "{password}", "{username}", "{email}")'
     cursor.execute(sql)
     conn.commit()
 
-    return '<script>document.location.href = document.referrer</script>'
+    flash("Success!")
+    return redirect(url_for("index"))
 
 
 @app.route('/signin')
-def signin():
+def signIn():
     return render_template('signin.html')
 
 
 @app.route('/signinpost', methods=['POST'])
-def signinpost():
+def signInPost():
     userid = request.form.get('userid')
     password = request.form.get('password')
 
     sql = f"select * from users where userid = '{userid}';"
     cursor.execute(sql)
-    result = cursor.fetchall()
+    result = cursor.fetchone()
 
     if cursor.rowcount == 0:
-        return '<script>alert("Not found!")</script>' \
-               '<script>document.location.href = document.referrer</script>'
+        flash("Wrong username!")
+        return redirect(url_for("signIn"))
 
-    if bcrypt.check_password_hash(result[0]['password'], password):
+    if bcrypt.check_password_hash(result['password'], password):
         session['userid'] = userid
-        session['username'] = result[0]['username']
-        session['id'] = result[0]['id']
+        session['username'] = result['username']
+        session['id'] = result['id']
 
         return redirect(url_for("index"))
     else:
-
-        return redirect(url_for("signin"))
+        flash("Wrong password!")
+        return redirect(url_for("signIn"))
 
 
 @app.route('/signout')
-def signout():
+def signOut():
     session['userid'] = ""
     session['username'] = ""
     session['id'] = ""
@@ -216,9 +252,10 @@ def signout():
     return redirect(url_for("index"))
 
 
+# API part
 @app.route('/api')
 def api():
-    sql = "SELECT * FROM `article`;"
+    sql = "select * from `article`;"
 
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -238,8 +275,8 @@ def api():
 
 
 @app.route('/api/post')
-def api_post():
-    sql = "SELECT * FROM `article`;"
+def apiPost():
+    sql = "select * from `article`;"
 
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -260,35 +297,54 @@ def api_post():
 
 
 @app.route('/api/<int:id>')
-def api_id(id):
-    sql = f'SELECT * FROM article where id={id};'
+def apiId(id):
+    sql = f'select * from article where id={id};'
 
     cursor.execute(sql)
-    result = cursor.fetchall()
+    result = cursor.fetchone()
 
     data = {
-        'title': result[0]['title'],
-        'text': result[0]['text'],
-        'username': result[0]['username'],
-        'date': result[0]['date'],
-        'view_count': result[0]['view_count']
+        'title': result['title'],
+        'text': result['text'],
+        'username': getUserName(result['id']),
+        'date': result['date'],
+        'view_count': result['view_count']
     }
 
     return jsonify(data)
 
 
-@app.route('/api/users')
-def api_users():
-    sql = f'SELECT * FROM users;'
-
+@app.route('/api/comments/<int:id>')
+def apiCommentId(id):
+    sql = f'select * from `comments` where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
 
+    comments = []
+
+    for obj in result:
+        comments_dic = {
+            'writer': getUserName(obj['writer_id']),
+            'comment': obj['comment'],
+            'id': obj['id']
+        }
+        comments.append(comments_dic)
+
+    return jsonify(comments)
+
+
+@app.route('/api/users')
+def apiUsers():
+    sql = f'select * from users;'
+
+    cursor.execute(sql)
+    result = cursor.fetchone()
+
     data = {
-        'id': result[0]['id'],
-        'userid': result[0]['userid'],
-        'username': result[0]['username'],
-        'email': result[0]['email']
+        'id': result['id'],
+        'userid': result['userid'],
+        'username': getUserName(result['id']),
+        'email': result['email']
     }
 
     return jsonify(data)

@@ -60,13 +60,26 @@
 
     <form method="post" action="/post">
         <div class="form-group row">
-            <input class="col-md-9 form-control" type="text" name="title" placeholder="Title">
-            <textarea class="col-12 form-control" type="text" name="text" placeholder="Text"></textarea>
+            {% if data is defined %}
+                <input class="col-md-9 form-control" type="text" name="title" value="{{ data.title }}">
+                <textarea class="col-12 form-control" type="text" name="text">{{ data.text }}</textarea>
+            {% else %}
+                <input class="col-md-9 form-control" type="text" name="title" placeholder="Title">
+                <textarea class="col-12 form-control" type="text" name="text" placeholder="Text"></textarea>
+            {% endif %}
             <button class="btn btn-primary btn-block" type="submit">Write</button>
         </div>
     </form>
 
 </div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
 
 </body>
 </html>

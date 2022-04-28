@@ -68,5 +68,12 @@
     </form>
 </div>
 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
 </body>
 </html>

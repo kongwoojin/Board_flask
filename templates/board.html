@@ -57,20 +57,18 @@
 </nav>
 
 <div class="container">
-    <h1>{{ data.title }}</h1>
-    <h4>{{ data.view_count }}</h4>
-    <h5>{{ data.username }}</h5>
-    <div class="card">
-        <div class="card-body">
-            {{ data.text }}
-        </div>
-    </div>
+    <h1 style="display: inline">{{ data.title }}</h1>
+    <a style="display: inline" href="/edit/{{ data.id }}">수정</a>
+    <a style="display: inline" href="/delete/{{ data.id }}">삭제</a>
+    <h5>작성자: {{ data.username }}</h5>
+    {{ data.text|safe }}
 
-    <a href="/edit/{{ data.id }}">수정</a>
+    <br>
+    <h4 style="display: inline">---<br>댓글</h4>
 
     {% for comment in comments %}
         <br>
-        {{ comment.id }} {{ comment.comment }} {{ comment.writer }}
+        {{ comment.writer }}: {{ comment.comment }}
     {% endfor %}
 
 
@@ -83,5 +81,12 @@
 
 </div>
 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
 </body>
 </html>
