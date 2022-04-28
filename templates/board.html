@@ -64,7 +64,9 @@
     {{ data.text|safe }}
 
     <br>
+    {% if comments is defined and comments|length > 0 %}
     <h4 style="display: inline">---<br>댓글</h4>
+    {% endif %}
 
     {% for comment in comments %}
         <br>
