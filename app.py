@@ -3,7 +3,7 @@
 from datetime import datetime
 
 import pymysql
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash, escape
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
 from flask_bcrypt import Bcrypt
 
 import database
@@ -74,8 +74,6 @@ def board(id):
         'id': result['id']
     }
 
-    print(escape(result['text']))
-
     sql = f'select * from comments where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -96,6 +94,7 @@ def board(id):
 @app.route('/write')
 def write():
     if session['userid'] == "":
+        flash("Login first!")
         return redirect(url_for("signin"))
 
     return render_template('write.html')
@@ -249,6 +248,7 @@ def signOut():
     session['username'] = ""
     session['id'] = ""
 
+    flash("Success!")
     return redirect(url_for("index"))
 
 
