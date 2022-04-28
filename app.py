@@ -95,7 +95,7 @@ def board(id):
 def write():
     if session['userid'] == "":
         flash("Login first!")
-        return redirect(url_for("signin"))
+        return redirect(url_for("signIn"))
 
     return render_template('write.html')
 
