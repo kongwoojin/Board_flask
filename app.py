@@ -51,7 +51,7 @@ def index():
         }
         data_list.append(data_dic)
 
-    return render_template('index.html', data_list=data_list)
+    return render_template('index.html', data_list=data_list, username=session['username'])
 
 
 @app.route('/board/<id>')
@@ -88,7 +88,7 @@ def board(id):
         }
         comments.append(comments_dic)
 
-    return render_template('board.html', data=data, comments=comments)
+    return render_template('board.html', data=data, comments=comments, username=session['username'])
 
 
 @app.route('/write')
@@ -120,9 +120,9 @@ def edit(id):
             'text': result['text']
         }
 
-        return render_template('write.html', data=data)
+        return render_template('write.html', data=data, username=session['username'])
     else:
-        return render_template('write.html')
+        return render_template('write.html', username=session['username'])
 
 
 @app.route('/post', methods=['POST'])
