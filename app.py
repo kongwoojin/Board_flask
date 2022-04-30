@@ -1,9 +1,9 @@
 #  Copyright © 2022 WooJin Kong. All rights reserved.
-
+import os
 from datetime import datetime
 
 import pymysql
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash, send_from_directory
 from flask_bcrypt import Bcrypt
 
 import database
@@ -12,6 +12,7 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 app.secret_key = 'secret string'
+app.config['CKEDITOR_FILE_UPLOADER'] = 'upload'
 
 conn = database.dbConnection()
 
@@ -141,10 +142,11 @@ def post():
         return redirect(url_for("index"))
 
     if "edit" in request.referrer:  # Edit article
-        sql = f'update article set title = "{title}", text = "{text}" where id = {request.referrer.split("/")[-1]}'
+        sql = f'update article set title = \'{title}\', text = \'{text}\' where id = {request.referrer.split("/")[-1]}'
     else:  # Write article
         sql = f'insert into article(title, text, username, date, writer_id) ' \
-              f'values("{title}", "{text}", "{username}", "{now.strftime("%Y-%m-%d %H:%M:%S")}", {writer_id})'
+              f'values(\'{title}\', \'{text}\', \'{username}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
+    print(sql)
     cursor.execute(sql)
     conn.commit()
 
@@ -180,7 +182,7 @@ def comment():
     article_id = int(request.referrer.split('/')[-1])
 
     sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
-          f'values("{comment}", "{article_id}", 0, {writer_id})'
+          f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
     cursor.execute(sql)
     conn.commit()
 
@@ -209,7 +211,7 @@ def signUpPost():
         return redirect(url_for("signUp"))
 
     sql = f'insert into users(userid, password, username, email) ' \
-          f'values("{userid}", "{password}", "{username}", "{email}")'
+          f'values(\'{userid}\', \'{password}\', \'{username}\', \'{email}\')'
     cursor.execute(sql)
     conn.commit()
 
@@ -256,10 +258,16 @@ def signOut():
     return redirect(url_for("index"))
 
 
+@app.route('/files/<path:filename>')
+def uploaded_files(filename):
+    path = '/the/uploaded/directory'
+    return send_from_directory(path, filename)
+
+
 # API part
 @app.route('/api')
 def api():
-    sql = "select * from `article`;"
+    sql = "select * from article;"
 
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -280,7 +288,7 @@ def api():
 
 @app.route('/api/post')
 def apiPost():
-    sql = "select * from `article`;"
+    sql = "select * from article;"
 
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -320,7 +328,7 @@ def apiId(id):
 
 @app.route('/api/comments/<int:id>')
 def apiCommentId(id):
-    sql = f'select * from `comments` where article_id ={id};'
+    sql = f'select * from comments where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
 

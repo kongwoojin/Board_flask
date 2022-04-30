@@ -1,17 +1,32 @@
 {% extends "layout.html" %}
 {% set active_page = "write" %}
 
+{% block head %}
+    {{ super() }}
+    <script src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
+{% endblock %}
+
 {% block content %}
     <form method="post" action="/post">
-        <div class="form-group row">
+        <div class="form-group">
             {% if data is defined %}
                 <input class="col-md-9 form-control" type="text" name="title" value="{{ data.title }}">
-                <textarea class="col-12 form-control" type="text" name="text" rows="10">{{ data.text }}</textarea>
+                <hr>
+                <textarea id="editor" type="text" name="text">{{ data.text }}</textarea>
             {% else %}
                 <input class="col-md-9 form-control" type="text" name="title" placeholder="Title">
-                <textarea class="col-12 form-control" type="text" name="text" placeholder="Text" rows="10"></textarea>
+                <hr>
+                <textarea id="editor" type="text" name="text" placeholder="Text"></textarea>
             {% endif %}
             <button class="btn btn-primary btn-block" type="submit">Write</button>
         </div>
     </form>
+    <script>
+        ClassicEditor
+            .create(document.querySelector('#editor'))
+
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
 {% endblock %}
