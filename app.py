@@ -98,7 +98,7 @@ def write():
         flash("Login first!")
         return redirect(url_for("signIn"))
 
-    return render_template('write.html')
+    return render_template('write.html', username=session['username'])
 
 
 @app.route('/edit/<int:id>')
