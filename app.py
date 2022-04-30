@@ -34,7 +34,7 @@ def getUserName(id):
 
 @app.route('/')
 def index():
-    sql = "select * from article;"
+    sql = "select * from article order by id desc;"
     cursor.execute(sql)
     result = cursor.fetchall()
 
