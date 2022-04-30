@@ -129,7 +129,7 @@ def edit(id):
 def post():
     title = request.form.get('title')
     text = request.form.get('text').replace("\n", "<br/>")
-    username = getUserName(session['id'])
+    username = session['username']
     writer_id = int(session['id'])
 
     print(writer_id)
@@ -171,7 +171,7 @@ def delete(id):
 
 @app.route('/comment', methods=['POST'])
 def comment():
-    if session['id'] == "":
+    if session['userid'] == "":
         flash("Login first!")
         return '<script>document.location.href = document.referrer</script>'
 
@@ -237,6 +237,7 @@ def signInPost():
 
     if bcrypt.check_password_hash(result['password'], password):
         session['userid'] = userid
+        session['username'] = result['username']
         session['id'] = result['id']
 
         return redirect(url_for("index"))
@@ -248,6 +249,7 @@ def signInPost():
 @app.route('/signout')
 def signOut():
     session['userid'] = ""
+    session['username'] = ""
     session['id'] = ""
 
     flash("Success!")
