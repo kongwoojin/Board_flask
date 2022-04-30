@@ -1,9 +1,8 @@
 #  Copyright © 2022 WooJin Kong. All rights reserved.
-import os
 from datetime import datetime
 
 import pymysql
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
 from flask_bcrypt import Bcrypt
 
 import database
@@ -12,7 +11,6 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 app.secret_key = 'secret string'
-app.config['CKEDITOR_FILE_UPLOADER'] = 'upload'
 
 conn = database.dbConnection()
 
@@ -146,7 +144,6 @@ def post():
     else:  # Write article
         sql = f'insert into article(title, text, username, date, writer_id) ' \
               f'values(\'{title}\', \'{text}\', \'{username}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
-    print(sql)
     cursor.execute(sql)
     conn.commit()
 
@@ -256,12 +253,6 @@ def signOut():
 
     flash("Success!")
     return redirect(url_for("index"))
-
-
-@app.route('/files/<path:filename>')
-def uploaded_files(filename):
-    path = '/the/uploaded/directory'
-    return send_from_directory(path, filename)
 
 
 # API part
