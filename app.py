@@ -142,8 +142,8 @@ def post():
     if "edit" in request.referrer:  # Edit article
         sql = f'update article set title = \'{title}\', text = \'{text}\' where id = {request.referrer.split("/")[-1]}'
     else:  # Write article
-        sql = f'insert into article(title, text, username, date, writer_id) ' \
-              f'values(\'{title}\', \'{text}\', \'{username}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
+        sql = f'insert into article(title, text, date, writer_id) ' \
+              f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
     cursor.execute(sql)
     conn.commit()
 
@@ -290,7 +290,7 @@ def apiPost():
         data_dic = {
             'id': obj['id'],
             'title': obj['title'],
-            'username': obj['username'],
+            'username': getUserName(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
