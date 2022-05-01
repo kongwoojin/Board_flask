@@ -2,13 +2,22 @@
 {% set active_page = "signup" %}
 
 {% block content %}
-    <form class="form-signup" method="post">
+    <form class="form-group form-signup" method="post">
         {{ form.csrf_token }}
         <h1 class="h3 mb-3 font-weight-normal">Sign Up</h1>
+        <label>{{ form.userid.label }}</label>
         {{ form.userid(class="form-control", placeholder="User ID") }}
+
+        <label>{{ form.username.label }}</label>
         {{ form.username(class="form-control", placeholder="Username") }}
+
+        <label>{{ form.email.label }}</label>
         {{ form.email(class="form-control", placeholder="Email") }}
+
+        <label>{{ form.password.label }}</label>
         {{ form.password(class="form-control", placeholder="Password") }}
+
+        <label>{{ form.re_password.label }}</label>
         {{ form.re_password(class="form-control", placeholder="Password confirm") }}
 
         <button class="btn btn-primary btn-block" type="submit">Sign up</button>
