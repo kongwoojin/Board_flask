@@ -50,7 +50,12 @@ def index():
         }
         data_list.append(data_dic)
 
-    return render_template('index.html', data_list=data_list, username=session['username'])
+    print(session)
+
+    if session.get('username'):
+        return render_template('index.html', data_list=data_list, username=session['username'])
+    else:
+        return render_template('index.html', data_list=data_list)
 
 
 @app.route('/board/<id>')
@@ -247,10 +252,9 @@ def signInPost():
 
 @app.route('/signout')
 def signOut():
-    session['userid'] = ""
-    session['username'] = ""
-    session['id'] = ""
-
+    session.pop("username", None)
+    session.pop("userid", None)
+    session.pop("id", None)
     flash("Success!")
     return redirect(url_for("index"))
 
