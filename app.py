@@ -4,14 +4,15 @@ from datetime import datetime
 
 import pymysql
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
+from flask_wtf.csrf import CSRFProtect
 from flask_bcrypt import Bcrypt
+
+from forms import *
 
 import database
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-
-app.secret_key = 'secret string'
 
 conn = database.dbConnection()
 
@@ -207,39 +208,61 @@ def comment():
     return '<script>document.location.href = document.referrer</script>'
 
 
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signUp():
-    return render_template('signup.html')
+    form = SignUpForm(request.form)
+    if request.method == 'POST' and form.validate():
+        userid = form.userid.data
+        username = form.username.data
+        email = form.email.data
+        password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+
+        sqlForCheck = f"select * from users where userid = '{userid}';"
+        cursor.execute(sqlForCheck)
+
+        rowCount = cursor.rowcount
+
+        if rowCount != 0:
+            flash("User Exist!")
+            return redirect(url_for("signUp"))
+
+        sql = f'insert into users(userid, password, username, email) ' \
+              f'values(\'{userid}\', \'{password}\', \'{username}\', \'{email}\')'
+        cursor.execute(sql)
+        conn.commit()
+
+        flash('Registerd!')
+        return redirect(url_for('signIn'))
+
+    return render_template('signup.html', form=form)
 
 
-@app.route('/signuppost', methods=['POST'])
-def signUpPost():
-    userid = request.form.get('userid')
-    password = bcrypt.generate_password_hash(request.form.get('password')).decode('utf-8')
-    username = request.form.get('username')
-    email = request.form.get('email')
-
-    sqlForCheck = f"select * from users where userid = '{userid}';"
-    cursor.execute(sqlForCheck)
-
-    rowCount = cursor.rowcount
-
-    if rowCount != 0:
-        flash("User Exist!")
-        return redirect(url_for("signUp"))
-
-    sql = f'insert into users(userid, password, username, email) ' \
-          f'values(\'{userid}\', \'{password}\', \'{username}\', \'{email}\')'
-    cursor.execute(sql)
-    conn.commit()
-
-    flash("Success!")
-    return redirect(url_for("index"))
-
-
-@app.route('/signin')
+@app.route('/signin', methods=['GET', 'POST'])
 def signIn():
-    return render_template('signin.html')
+    form = SignInForm(request.form)
+    if request.method == 'POST' and form.validate():
+        userid = form.userid.data
+        password = form.password.data
+
+        sql = f"select * from users where userid = '{userid}';"
+        cursor.execute(sql)
+        result = cursor.fetchone()
+
+        if cursor.rowcount == 0:
+            flash("Wrong username!")
+            return redirect(url_for("signIn"))
+
+        if bcrypt.check_password_hash(result['password'], password):
+            session['userid'] = userid
+            session['username'] = result['username']
+            session['id'] = result['id']
+
+            return redirect(url_for("index"))
+        else:
+            flash("Wrong password!")
+            return redirect(url_for("signIn"))
+
+    return render_template('signin.html', form=form)
 
 
 @app.route('/signinpost', methods=['POST'])
@@ -374,4 +397,9 @@ def apiUsers():
 
 
 if __name__ == '__main__':
+    app.config['SECRET_KEY'] = 'abcdefg1234567'
+
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+
     app.run()
