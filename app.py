@@ -114,7 +114,7 @@ def board(id):
 
 @app.route('/write')
 def write():
-    if session['userid'] == "":
+    if session.get('userid') is None:
         flash("Login first!")
         return redirect(url_for("signIn"))
 
