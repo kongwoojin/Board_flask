@@ -26,4 +26,20 @@
         </tbody>
     </table>
 
+    <ul class="pagination">
+        {% if curPage != 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('index', page = curPage - 1) }}">Previous</a>
+            </li>
+        {% endif %}
+        {% for page in range(pages) %}
+            <li class="page-item{% if page + 1 == curPage %} active{% endif %}">
+                <a class="page-link" href="{{ url_for('index', page = page + 1) }}">{{ page + 1 }}</a>
+            </li>
+        {% endfor %}
+        {% if curPage != pages %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('index', page = curPage + 1) }}">Next</a></li>
+        {% endif %}
+
+    </ul>
 {% endblock %}

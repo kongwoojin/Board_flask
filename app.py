@@ -1,4 +1,5 @@
 #  Copyright © 2022 WooJin Kong. All rights reserved.
+import math
 from datetime import datetime
 
 import pymysql
@@ -34,8 +35,24 @@ def getUserName(id):
 
 @app.route('/')
 def index():
-    sql = "select * from article order by id desc;"
+    curPage = (request.args.get('page'))
+    if curPage is None:
+        curPage = 1
+    else:
+        curPage = int(curPage)
+
+    articlePerPage = 15
+
+    sql = "select count(*) from article;"
     cursor.execute(sql)
+    result = cursor.fetchone()
+    rowCount = int(result['count(*)'])
+    pages = math.ceil(rowCount / articlePerPage)
+
+    sql = f'select * from article order by id desc limit {(curPage - 1) * articlePerPage}, {articlePerPage};'
+
+    cursor.execute(sql)
+
     result = cursor.fetchall()
 
     data_list = []
@@ -50,12 +67,11 @@ def index():
         }
         data_list.append(data_dic)
 
-    print(session)
-
     if session.get('username'):
-        return render_template('index.html', data_list=data_list, username=session['username'])
+        return render_template('index.html', data_list=data_list, pages=pages,
+                               curPage=curPage, username=session['username'])
     else:
-        return render_template('index.html', data_list=data_list)
+        return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
 
 
 @app.route('/board/<id>')
