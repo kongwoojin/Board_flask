@@ -68,7 +68,6 @@ def index():
         }
         data_list.append(data_dic)
 
-
     return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
 
 
@@ -208,7 +207,7 @@ def comment():
 @app.route('/signup', methods=['GET', 'POST'])
 def signUp():
     form = SignUpForm(request.form)
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         userid = form.userid.data
         username = form.username.data
         email = form.email.data
@@ -237,7 +236,7 @@ def signUp():
 @app.route('/signin', methods=['GET', 'POST'])
 def signIn():
     form = SignInForm(request.form)
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         userid = form.userid.data
         password = form.password.data
 
