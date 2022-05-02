@@ -10,6 +10,7 @@
         <label>{{ form.password.label }}</label>
         {{ form.password(class="form-control", placeholder="Password") }}
 
-        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        {{ form.submit(class="btn btn-primary") }}
+
     </form>
 {% endblock %}

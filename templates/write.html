@@ -7,19 +7,12 @@
 {% endblock %}
 
 {% block content %}
-    <form method="post" action="/post">
-        <div class="form-group">
-            {% if data is defined %}
-                <input class="col-md-9 form-control" type="text" name="title" value="{{ data.title }}">
-                <hr>
-                <textarea id="editor" type="text" name="text">{{ data.text }}</textarea>
-            {% else %}
-                <input class="col-md-9 form-control" type="text" name="title" placeholder="Title">
-                <hr>
-                <textarea id="editor" type="text" name="text" placeholder="Text"></textarea>
-            {% endif %}
-            <button class="btn btn-primary btn-block" type="submit">Write</button>
-        </div>
+    <form class="form-group" method="post">
+        {{ form.csrf_token }}
+        {{ form.title(class="col-md-9 form-control") }}
+        <hr>
+        {{ form.text(id="editor", class="form-control") }}
+        {{ form.submit(class="btn btn-primary") }}
     </form>
     <script>
         ClassicEditor

@@ -71,12 +71,15 @@ def index():
     return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
 
 
-@app.route('/board/<id>')
+@app.route('/board/<id>', methods=['GET', 'POST'])
 def board(id):
-    sql = f'update article set view_count = view_count + 1 where id = {id};'
+    form = CommentForm(request.form)
 
-    cursor.execute(sql)
-    conn.commit()
+    if not form.is_submitted():
+        sql = f'update article set view_count = view_count + 1 where id = {id};'
+
+        cursor.execute(sql)
+        conn.commit()
 
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
@@ -105,16 +108,49 @@ def board(id):
         }
         comments.append(comments_dic)
 
-    return render_template('board.html', data=data, comments=comments)
+    if form.is_submitted() and form.validate_on_submit():
+        if session['userid'] == "":
+            flash("Login first!")
+
+        comment = form.comment.data
+        writer_id = int(session['id'])
+        article_id = id
+
+        sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
+              f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
+        cursor.execute(sql)
+        conn.commit()
+        return '<script>document.location.href = document.referrer</script>'
+
+    return render_template('board.html', data=data, comments=comments, form=form)
 
 
-@app.route('/write')
+@app.route('/write', methods=['GET', 'POST'])
 def write():
     if session.get('userid') is None:
         flash("Login first!")
         return redirect(url_for("signIn"))
 
-    return render_template('write.html')
+    form = WriteForm(request.form)
+
+    if form.validate_on_submit():
+        title = form.title.data
+        text = form.text.data
+        writer_id = int(session['id'])
+
+        now = datetime.now()
+        if isXSSPossible(text):
+            flash("XSS detected!")
+            return redirect(url_for("index"))
+
+        sql = f'insert into article(title, text, date, writer_id) ' \
+              f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
+        cursor.execute(sql)
+        conn.commit()
+
+        return redirect(url_for("index"))
+
+    return render_template('write.html', form=form)
 
 
 @app.route('/edit/<int:id>')
@@ -137,35 +173,27 @@ def edit(id):
             'text': result['text']
         }
 
-        return render_template('write.html', data=data)
-    else:
-        return render_template('write.html')
+        form = WriteForm(request.form)
 
+        form.title.data = data['title']
+        form.text.data = data['text']
 
-@app.route('/post', methods=['POST'])
-def post():
-    title = request.form.get('title')
-    text = request.form.get('text').replace("\n", "<br/>")
-    username = session['username']
-    writer_id = int(session['id'])
+        if form.validate_on_submit():
+            title = form.title.data
+            text = form.text.data
 
-    print(writer_id)
-    print(request.referrer.split('/')[-1])
+            if isXSSPossible(text):
+                flash("XSS detected!")
+                return redirect(url_for("index"))
 
-    now = datetime.now()
-    if isXSSPossible(text):
-        flash("XSS detected!")
-        return redirect(url_for("index"))
+            sql = f'update article set title = \'{title}\', text = \'{text}\' ' \
+                  f'where id = {request.referrer.split("/")[-1]}'
+            cursor.execute(sql)
+            conn.commit()
 
-    if "edit" in request.referrer:  # Edit article
-        sql = f'update article set title = \'{title}\', text = \'{text}\' where id = {request.referrer.split("/")[-1]}'
-    else:  # Write article
-        sql = f'insert into article(title, text, date, writer_id) ' \
-              f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
-    cursor.execute(sql)
-    conn.commit()
+            return redirect(url_for("index"))
 
-    return redirect(url_for("index"))
+    return render_template('write.html', form=form)
 
 
 @app.route('/delete/<int:id>', methods=['GET'])

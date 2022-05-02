@@ -21,10 +21,9 @@
 
     <hr>
 
-    <form method="post" action="/comment" class="container">
-        <div class="form-group row">
-            <textarea class="col-12 form-control" type="text" name="comment" placeholder="comment"></textarea>
-            <button class="btn btn-primary btn-block" type="submit">Write</button>
-        </div>
+    <form method="post" class="form-group">
+        {{ form.csrf_token }}
+        {{ form.comment(class="form-control") }}
+        {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}

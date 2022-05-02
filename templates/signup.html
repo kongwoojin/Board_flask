@@ -17,9 +17,9 @@
         <label>{{ form.password.label }}</label>
         {{ form.password(class="form-control", placeholder="Password") }}
 
-        <label>{{ form.re_password.label }}</label>
-        {{ form.re_password(class="form-control", placeholder="Password confirm") }}
+        <label>{{ form.confirm.label }}</label>
+        {{ form.confirm(class="form-control", placeholder="Password confirm") }}
 
-        <button class="btn btn-primary btn-block" type="submit">Sign up</button>
+        {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}
