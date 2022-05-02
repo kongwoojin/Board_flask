@@ -68,11 +68,8 @@ def index():
         }
         data_list.append(data_dic)
 
-    if session.get('username'):
-        return render_template('index.html', data_list=data_list, pages=pages,
-                               curPage=curPage, username=session['username'])
-    else:
-        return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
+
+    return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
 
 
 @app.route('/board/<id>')
@@ -109,7 +106,7 @@ def board(id):
         }
         comments.append(comments_dic)
 
-    return render_template('board.html', data=data, comments=comments, username=session['username'])
+    return render_template('board.html', data=data, comments=comments)
 
 
 @app.route('/write')
@@ -118,7 +115,7 @@ def write():
         flash("Login first!")
         return redirect(url_for("signIn"))
 
-    return render_template('write.html', username=session['username'])
+    return render_template('write.html')
 
 
 @app.route('/edit/<int:id>')
@@ -141,9 +138,9 @@ def edit(id):
             'text': result['text']
         }
 
-        return render_template('write.html', data=data, username=session['username'])
+        return render_template('write.html', data=data)
     else:
-        return render_template('write.html', username=session['username'])
+        return render_template('write.html')
 
 
 @app.route('/post', methods=['POST'])
