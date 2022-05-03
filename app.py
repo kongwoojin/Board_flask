@@ -168,13 +168,13 @@ def edit(id):
     cursor.execute(sql)
     result = cursor.fetchone()
 
+    form = WriteForm(request.form)
+
     if result is not None:
         data = {
             'title': result['title'],
             'text': result['text']
         }
-
-        form = WriteForm(request.form)
 
         form.title.data = data['title']
         form.text.data = data['text']
