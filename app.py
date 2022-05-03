@@ -214,24 +214,6 @@ def delete(id):
     return redirect(url_for("index"))
 
 
-@app.route('/comment', methods=['POST'])
-def comment():
-    if session.get('userid') is None:
-        flash("Login first!")
-        return '<script>document.location.href = document.referrer</script>'
-
-    comment = request.form.get('comment')
-    writer_id = int(session['id'])
-    article_id = int(request.referrer.split('/')[-1])
-
-    sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
-          f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
-    cursor.execute(sql)
-    conn.commit()
-
-    return '<script>document.location.href = document.referrer</script>'
-
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signUp():
     form = SignUpForm(request.form)
@@ -255,7 +237,6 @@ def signUp():
         cursor.execute(sql)
         conn.commit()
 
-        flash('Registerd!')
         return redirect(url_for('signIn'))
 
     return render_template('signup.html', form=form)
@@ -289,36 +270,11 @@ def signIn():
     return render_template('signin.html', form=form)
 
 
-@app.route('/signinpost', methods=['POST'])
-def signInPost():
-    userid = request.form.get('userid')
-    password = request.form.get('password')
-
-    sql = f"select * from users where userid = '{userid}';"
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    if cursor.rowcount == 0:
-        flash("Wrong username!")
-        return redirect(url_for("signIn"))
-
-    if bcrypt.check_password_hash(result['password'], password):
-        session['userid'] = userid
-        session['username'] = result['username']
-        session['id'] = result['id']
-
-        return redirect(url_for("index"))
-    else:
-        flash("Wrong password!")
-        return redirect(url_for("signIn"))
-
-
 @app.route('/signout')
 def signOut():
     session.pop("username", None)
     session.pop("userid", None)
     session.pop("id", None)
-    flash("Success!")
     return redirect(url_for("index"))
 
 
