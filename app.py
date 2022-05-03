@@ -44,7 +44,7 @@ def index():
 
     articlePerPage = 15
 
-    sql = "select count(*) from article;"
+    sql = 'select count(*) from article;'
     cursor.execute(sql)
     result = cursor.fetchone()
     rowCount = int(result['count(*)'])
@@ -130,7 +130,7 @@ def board(id):
 def write():
     if session.get('userid') is None:
         flash("Login first!")
-        return redirect(url_for("signIn"))
+        return redirect(url_for('signIn'))
 
     form = WriteForm(request.form)
 
@@ -142,14 +142,14 @@ def write():
         now = datetime.now()
         if isXSSPossible(text):
             flash("XSS detected!")
-            return redirect(url_for("index"))
+            return redirect(url_for('index'))
 
         sql = f'insert into article(title, text, date, writer_id) ' \
               f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
         cursor.execute(sql)
         conn.commit()
 
-        return redirect(url_for("index"))
+        return redirect(url_for('index'))
 
     return render_template('write.html', form=form)
 
@@ -162,7 +162,7 @@ def edit(id):
 
     if session['id'] != result['writer_id']:
         flash("No permission!")
-        return redirect(url_for("index"))
+        return redirect(url_for('index'))
 
     sql = f'select * from article where id = {id};'
     cursor.execute(sql)
@@ -185,14 +185,14 @@ def edit(id):
 
             if isXSSPossible(text):
                 flash("XSS detected!")
-                return redirect(url_for("index"))
+                return redirect(url_for('index'))
 
             sql = f'update article set title = \'{title}\', text = \'{text}\' ' \
                   f'where id = {request.referrer.split("/")[-1]}'
             cursor.execute(sql)
             conn.commit()
 
-            return redirect(url_for("index"))
+            return redirect(url_for('index'))
 
     return render_template('write.html', form=form)
 
@@ -205,14 +205,14 @@ def delete(id):
 
     if session['id'] != result['writer_id']:
         flash("No permission!")
-        return redirect(url_for("index"))
+        return redirect(url_for('index'))
 
     sql = f'delete from article where id = {id}'
     cursor.execute(sql)
     conn.commit()
 
     flash("Deleted!")
-    return redirect(url_for("index"))
+    return redirect(url_for('index'))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -224,14 +224,14 @@ def signUp():
         email = form.email.data
         password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
 
-        sqlForCheck = f"select * from users where userid = '{userid}';"
+        sqlForCheck = f'select * from users where userid = \'{userid}\';'
         cursor.execute(sqlForCheck)
 
         rowCount = cursor.rowcount
 
         if rowCount != 0:
             flash("User Exist!")
-            return redirect(url_for("signUp"))
+            return redirect(url_for('signUp'))
 
         sql = f'insert into users(userid, password, username, email) ' \
               f'values(\'{userid}\', \'{password}\', \'{username}\', \'{email}\')'
@@ -254,39 +254,39 @@ def signIn():
         userid = form.userid.data
         password = form.password.data
 
-        sql = f"select * from users where userid = '{userid}';"
+        sql = f'select * from users where userid = \'{userid}\';'
         cursor.execute(sql)
         result = cursor.fetchone()
 
         if cursor.rowcount == 0:
             flash("Wrong username!")
-            return redirect(url_for("signIn"))
+            return redirect(url_for('signIn'))
 
         if bcrypt.check_password_hash(result['password'], password):
             session['userid'] = userid
             session['username'] = result['username']
             session['id'] = result['id']
 
-            return redirect(url_for("index"))
+            return redirect(url_for('index'))
         else:
             flash("Wrong password!")
-            return redirect(url_for("signIn"))
+            return redirect(url_for('signIn'))
 
     return render_template('signin.html', form=form)
 
 
 @app.route('/signout')
 def signOut():
-    session.pop("username", None)
-    session.pop("userid", None)
-    session.pop("id", None)
-    return redirect(url_for("index"))
+    session.pop('username', None)
+    session.pop('userid', None)
+    session.pop('id', None)
+    return redirect(url_for('index'))
 
 
 # API part
 @app.route('/api')
 def api():
-    sql = "select * from article;"
+    sql = 'select * from article;'
 
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -307,7 +307,7 @@ def api():
 
 @app.route('/api/post')
 def apiPost():
-    sql = "select * from article;"
+    sql = 'select * from article;'
 
     cursor.execute(sql)
     result = cursor.fetchall()
