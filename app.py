@@ -238,6 +238,10 @@ def signUp():
         conn.commit()
 
         return redirect(url_for('signIn'))
+    else:
+        for e in form.errors.values():
+            print(e[0])
+            flash(e[0])
 
     return render_template('signup.html', form=form)
 
