@@ -120,7 +120,7 @@ def board(id):
               f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
         cursor.execute(sql)
         conn.commit()
-        return '<script>document.location.href = document.referrer</script>'
+        return redirect(url_for('board', id=id))
 
     return render_template('board.html', data=data, comments=comments, form=form)
 
