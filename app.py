@@ -111,16 +111,17 @@ def board(id):
     if form.is_submitted() and form.validate_on_submit():
         if session.get('userid') is None:
             flash("Login first!")
+            return redirect(url_for('signIn'))
+        else:
+            comment = form.comment.data
+            writer_id = int(session['id'])
+            article_id = id
 
-        comment = form.comment.data
-        writer_id = int(session['id'])
-        article_id = id
-
-        sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
-              f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
-        cursor.execute(sql)
-        conn.commit()
-        return redirect(url_for('board', id=id))
+            sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
+                  f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
+            cursor.execute(sql)
+            conn.commit()
+            return redirect(url_for('board', id=id))
 
     return render_template('board.html', data=data, comments=comments, form=form)
 
