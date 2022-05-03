@@ -7,8 +7,7 @@ from wtforms.widgets import TextArea
 class SignUpForm(FlaskForm):
     userid = StringField('User ID', [InputRequired()])
     username = StringField('Username', [InputRequired()])
-    email = EmailField('Email', [InputRequired(),
-                                 Email(message="Not a valid email!")])
+    email = EmailField('Email', [InputRequired()])
     password = PasswordField('Password', [InputRequired(),
                                           Length(min=8, message="Password too short!"),
                                           EqualTo('confirm', message="Password not match!")])
