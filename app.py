@@ -109,7 +109,7 @@ def board(id):
         comments.append(comments_dic)
 
     if form.is_submitted() and form.validate_on_submit():
-        if session['userid'] == "":
+        if session.get('userid') is None:
             flash("Login first!")
 
         comment = form.comment.data
@@ -216,7 +216,7 @@ def delete(id):
 
 @app.route('/comment', methods=['POST'])
 def comment():
-    if session['userid'] == "":
+    if session.get('userid') is None:
         flash("Login first!")
         return '<script>document.location.href = document.referrer</script>'
 
