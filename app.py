@@ -20,7 +20,7 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 
 def isXSSPossible(text):
-    if "alert" in text:
+    if "<script>" in text:
         return True
     else:
         return False
