@@ -85,45 +85,49 @@ def board(id):
     cursor.execute(sql)
     result = cursor.fetchone()
 
-    data = {
-        'title': result['title'],
-        'text': result['text'],
-        'username': getUserName(result['writer_id']),
-        'date': result['date'],
-        'view_count': result['view_count'],
-        'id': result['id']
-    }
-
-    sql = f'select * from comments where article_id ={id};'
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    comments = []
-
-    for obj in result:
-        comments_dic = {
-            'writer': getUserName(obj['writer_id']),
-            'comment': obj['comment'],
-            'id': obj['id']
+    if cursor.rowcount == 0:
+        flash("Article not exist!")
+        return redirect(url_for('index'))
+    else:
+        data = {
+            'title': result['title'],
+            'text': result['text'],
+            'username': getUserName(result['writer_id']),
+            'date': result['date'],
+            'view_count': result['view_count'],
+            'id': result['id']
         }
-        comments.append(comments_dic)
 
-    if form.is_submitted() and form.validate_on_submit():
-        if session.get('userid') is None:
-            flash("Login first!")
-            return redirect(url_for('signIn'))
-        else:
-            comment = form.comment.data
-            writer_id = int(session['id'])
-            article_id = id
+        sql = f'select * from comments where article_id ={id};'
+        cursor.execute(sql)
+        result = cursor.fetchall()
 
-            sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
-                  f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
-            cursor.execute(sql)
-            conn.commit()
-            return redirect(url_for('board', id=id))
+        comments = []
 
-    return render_template('board.html', data=data, comments=comments, form=form)
+        for obj in result:
+            comments_dic = {
+                'writer': getUserName(obj['writer_id']),
+                'comment': obj['comment'],
+                'id': obj['id']
+            }
+            comments.append(comments_dic)
+
+        if form.is_submitted() and form.validate_on_submit():
+            if session.get('userid') is None:
+                flash("Login first!")
+                return redirect(url_for('signIn'))
+            else:
+                comment = form.comment.data
+                writer_id = int(session['id'])
+                article_id = id
+
+                sql = f'insert into comments(comment, article_id, reply_to, writer_id) ' \
+                      f'values(\'{comment}\', \'{article_id}\', 0, {writer_id})'
+                cursor.execute(sql)
+                conn.commit()
+                return redirect(url_for('board', id=id))
+
+        return render_template('board.html', data=data, comments=comments, form=form)
 
 
 @app.route('/write', methods=['GET', 'POST'])
