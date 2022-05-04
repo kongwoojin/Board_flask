@@ -144,6 +144,7 @@ def write():
             flash("XSS detected!")
             return redirect(url_for('index'))
 
+        text = text.replace("'", '"')
         sql = f'insert into article(title, text, date, writer_id) ' \
               f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
         cursor.execute(sql)
