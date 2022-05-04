@@ -12,6 +12,7 @@ from forms import *
 import database
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'abcdefg1234567'
 bcrypt = Bcrypt(app)
 
 conn = database.dbConnection()
@@ -385,8 +386,6 @@ def apiUsers():
 
 
 if __name__ == '__main__':
-    app.config['SECRET_KEY'] = 'abcdefg1234567'
-
     csrf = CSRFProtect()
     csrf.init_app(app)
 
