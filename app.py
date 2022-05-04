@@ -36,7 +36,7 @@ def getUserName(id):
 
 @app.route('/')
 def index():
-    curPage = (request.args.get('page'))
+    curPage = request.args.get('page')
     if curPage is None:
         curPage = 1
     else:
@@ -51,9 +51,7 @@ def index():
     pages = math.ceil(rowCount / articlePerPage)
 
     sql = f'select * from article order by id desc limit {(curPage - 1) * articlePerPage}, {articlePerPage};'
-
     cursor.execute(sql)
-
     result = cursor.fetchall()
 
     data_list = []
