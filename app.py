@@ -158,7 +158,7 @@ def write():
     return render_template('write.html', form=form)
 
 
-@app.route('/edit/<int:id>')
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
