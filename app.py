@@ -341,7 +341,7 @@ def apiId(id):
     data = {
         'title': result['title'],
         'text': result['text'],
-        'username': getUserName(result['id']),
+        'username': getUserName(result['writer_id']),
         'date': result['date'],
         'view_count': result['view_count']
     }
@@ -378,7 +378,7 @@ def apiUsers():
     data = {
         'id': result['id'],
         'userid': result['userid'],
-        'username': getUserName(result['id']),
+        'username': getUserName(result['writer_id']),
         'email': result['email']
     }
 
