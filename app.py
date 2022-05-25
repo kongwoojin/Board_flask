@@ -2,22 +2,25 @@
 import math
 from datetime import datetime
 
-import pymysql
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
 from flask_wtf.csrf import CSRFProtect
 from flask_bcrypt import Bcrypt
 
 from forms import *
 
-import database
+from database import Database
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'abcdefg1234567'
 bcrypt = Bcrypt(app)
 
-conn = database.dbConnection()
+database = Database()
 
-cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+def getDatabase():
+    conn = database.dbConnection()
+    cursor = database.getCursor()
+    return conn, cursor
 
 
 def isXSSPossible(text):
@@ -28,15 +31,19 @@ def isXSSPossible(text):
 
 
 def getUserName(id):
+    conn, cursor = getDatabase()
     sql = f'select * from users where id = {id}'
     cursor.execute(sql)
     result = cursor.fetchone()
+
+    database.dbDisconnection()
 
     return result['username']
 
 
 @app.route('/')
 def index():
+    conn, cursor = getDatabase()
     curPage = request.args.get('page')
     if curPage is None:
         curPage = 1
@@ -67,11 +74,14 @@ def index():
         }
         data_list.append(data_dic)
 
+    database.dbDisconnection()
+
     return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
 
 
 @app.route('/board/<id>', methods=['GET', 'POST'])
 def board(id):
+    conn, cursor = getDatabase()
     form = CommentForm(request.form)
 
     if not form.is_submitted():
@@ -126,11 +136,14 @@ def board(id):
                 conn.commit()
                 return redirect(url_for('board', id=id))
 
+        database.dbDisconnection()
+
         return render_template('board.html', data=data, comments=comments, form=form)
 
 
 @app.route('/write', methods=['GET', 'POST'])
 def write():
+    conn, cursor = getDatabase()
     if session.get('userid') is None:
         flash("Login first!")
         return redirect(url_for('signIn'))
@@ -155,11 +168,14 @@ def write():
 
         return redirect(url_for('index'))
 
+    database.dbDisconnection()
+
     return render_template('write.html', form=form)
 
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
+    conn, cursor = getDatabase()
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
     result = cursor.fetchone()
@@ -198,11 +214,14 @@ def edit(id):
 
             return redirect(url_for('index'))
 
+    database.dbDisconnection()
+
     return render_template('write.html', form=form)
 
 
 @app.route('/delete/<int:id>', methods=['GET'])
 def delete(id):
+    conn, cursor = getDatabase()
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
     result = cursor.fetchone()
@@ -216,11 +235,13 @@ def delete(id):
     conn.commit()
 
     flash("Deleted!")
+    database.dbDisconnection()
     return redirect(url_for('index'))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signUp():
+    conn, cursor = getDatabase()
     form = SignUpForm(request.form)
     if form.validate_on_submit():
         userid = form.userid.data
@@ -248,11 +269,14 @@ def signUp():
             print(e[0])
             flash(e[0])
 
+    database.dbDisconnection()
+
     return render_template('signup.html', form=form)
 
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signIn():
+    conn, cursor = getDatabase()
     form = SignInForm(request.form)
     if form.validate_on_submit():
         userid = form.userid.data
@@ -276,6 +300,8 @@ def signIn():
             flash("Wrong password!")
             return redirect(url_for('signIn'))
 
+    database.dbDisconnection()
+
     return render_template('signin.html', form=form)
 
 
@@ -290,6 +316,7 @@ def signOut():
 # API part
 @app.route('/api')
 def api():
+    conn, cursor = getDatabase()
     sql = 'select * from article;'
 
     cursor.execute(sql)
@@ -306,11 +333,14 @@ def api():
         }
         data_list.append(data_dic)
 
+    database.dbDisconnection()
+
     return jsonify(data_list)
 
 
 @app.route('/api/post')
 def apiPost():
+    conn, cursor = getDatabase()
     sql = 'select * from article;'
 
     cursor.execute(sql)
@@ -328,11 +358,14 @@ def apiPost():
         }
         data_list.append(data_dic)
 
+    database.dbDisconnection()
+
     return jsonify(data_list)
 
 
 @app.route('/api/<int:id>')
 def apiId(id):
+    conn, cursor = getDatabase()
     sql = f'select * from article where id={id};'
 
     cursor.execute(sql)
@@ -346,11 +379,14 @@ def apiId(id):
         'view_count': result['view_count']
     }
 
+    database.dbDisconnection()
+
     return jsonify(data)
 
 
 @app.route('/api/comments/<int:id>')
 def apiCommentId(id):
+    conn, cursor = getDatabase()
     sql = f'select * from comments where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -365,11 +401,14 @@ def apiCommentId(id):
         }
         comments.append(comments_dic)
 
+    database.dbDisconnection()
+
     return jsonify(comments)
 
 
 @app.route('/api/users')
 def apiUsers():
+    conn, cursor = getDatabase()
     sql = f'select * from users;'
 
     cursor.execute(sql)
@@ -381,6 +420,8 @@ def apiUsers():
         'username': getUserName(result['writer_id']),
         'email': result['email']
     }
+
+    database.dbDisconnection()
 
     return jsonify(data)
 
