@@ -36,7 +36,6 @@ def isXSSPossible(text):
 
 def getUserName(id):
     if userNameCache.get(id) is None:
-        print('Not cached')
         conn, cursor = getDatabase()
         sql = f'select * from users where id = {id}'
         cursor.execute(sql)
