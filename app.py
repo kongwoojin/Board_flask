@@ -201,7 +201,22 @@ def edit(id):
 
     form = WriteForm(request.form)
 
-    if result is not None:
+    if form.validate_on_submit(): # On submit
+        title = form.title.data
+        text = form.text.data
+
+        if isXSSPossible(text):
+            flash("XSS detected!")
+            return redirect(url_for('index'))
+
+        sql = f'update article set title = \'{title}\', text = \'{text}\' ' \
+              f'where id = {request.referrer.split("/")[-1]}'
+        cursor.execute(sql)
+        conn.commit()
+
+        return redirect(url_for('index'))
+
+    else:
         data = {
             'title': result['title'],
             'text': result['text']
@@ -210,25 +225,9 @@ def edit(id):
         form.title.data = data['title']
         form.text.data = data['text']
 
-        if form.validate_on_submit():
-            title = form.title.data
-            text = form.text.data
-
-            if isXSSPossible(text):
-                flash("XSS detected!")
-                return redirect(url_for('index'))
-
-            sql = f'update article set title = \'{title}\', text = \'{text}\' ' \
-                  f'where id = {request.referrer.split("/")[-1]}'
-            cursor.execute(sql)
-            conn.commit()
-
-            return redirect(url_for('index'))
-
     database.dbDisconnection()
 
     return render_template('write.html', form=form)
-
 
 @app.route('/delete/<int:id>', methods=['GET'])
 def delete(id):
