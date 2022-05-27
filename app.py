@@ -191,7 +191,7 @@ def edit(id):
     cursor.execute(sql)
     result = cursor.fetchone()
 
-    if session['id'] != result['writer_id']:
+    if session.get('id') is None or session['id'] != result['writer_id']:
         flash("No permission!")
         return redirect(url_for('index'))
 
@@ -229,6 +229,7 @@ def edit(id):
 
     return render_template('write.html', form=form)
 
+
 @app.route('/delete/<int:id>', methods=['GET'])
 def delete(id):
     conn, cursor = getDatabase()
@@ -236,7 +237,7 @@ def delete(id):
     cursor.execute(sql)
     result = cursor.fetchone()
 
-    if session['id'] != result['writer_id']:
+    if session.get('id') is None or session['id'] != result['writer_id']:
         flash("No permission!")
         return redirect(url_for('index'))
 
