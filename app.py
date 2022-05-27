@@ -171,7 +171,8 @@ def write():
             flash("XSS detected!")
             return redirect(url_for('index'))
 
-        text = text.replace("'", '"')
+        title = title.replace("'", "''")
+        text = text.replace("'", "''")
         sql = f'insert into article(title, text, date, writer_id) ' \
               f'values(\'{title}\', \'{text}\', \'{now.strftime("%Y-%m-%d %H:%M:%S")}\', {writer_id})'
         cursor.execute(sql)
@@ -209,6 +210,8 @@ def edit(id):
             flash("XSS detected!")
             return redirect(url_for('index'))
 
+        title = title.replace("'", "''")
+        text = text.replace("'", "''")
         sql = f'update article set title = \'{title}\', text = \'{text}\' ' \
               f'where id = {request.referrer.split("/")[-1]}'
         cursor.execute(sql)
