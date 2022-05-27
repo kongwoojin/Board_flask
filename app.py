@@ -18,7 +18,7 @@ bcrypt = Bcrypt(app)
 
 database = Database()
 
-userNameCache = ExpiringDict(max_len=100, max_age_seconds=600) # Caching usernames for 10 minutes
+userNameCache = ExpiringDict(max_len=100, max_age_seconds=3600) # Caching usernames for 60 minutes
 
 
 def getDatabase():
