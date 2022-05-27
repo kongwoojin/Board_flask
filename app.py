@@ -45,6 +45,8 @@ def getUserName(id):
 
         userNameCache[id] = userName
 
+        database.dbDisconnection()
+
         return userName
     else:
         return userNameCache[id]
