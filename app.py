@@ -8,6 +8,8 @@ from flask_bcrypt import Bcrypt
 
 from forms import *
 
+from expiringdict import ExpiringDict
+
 from database import Database
 
 app = Flask(__name__)
@@ -15,6 +17,8 @@ app.config['SECRET_KEY'] = 'abcdefg1234567'
 bcrypt = Bcrypt(app)
 
 database = Database()
+
+userNameCache = ExpiringDict(max_len=100, max_age_seconds=600) # Caching usernames for 10 minutes
 
 
 def getDatabase():
@@ -31,14 +35,20 @@ def isXSSPossible(text):
 
 
 def getUserName(id):
-    conn, cursor = getDatabase()
-    sql = f'select * from users where id = {id}'
-    cursor.execute(sql)
-    result = cursor.fetchone()
+    if userNameCache.get(id) is None:
+        print('Not cached')
+        conn, cursor = getDatabase()
+        sql = f'select * from users where id = {id}'
+        cursor.execute(sql)
+        result = cursor.fetchone()
 
-    database.dbDisconnection()
+        userName = result['username']
 
-    return result['username']
+        userNameCache[id] = userName
+
+        return userName
+    else:
+        return userNameCache[id]
 
 
 @app.route('/')
