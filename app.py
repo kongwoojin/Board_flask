@@ -8,17 +8,19 @@ from flask_bcrypt import Bcrypt
 
 from forms import *
 
-from expiringdict import ExpiringDict
-
 from database import Database
+from local_data import Data
+
+import api
 
 app = Flask(__name__)
+app.register_blueprint(api.blue_api)
+
 app.config['SECRET_KEY'] = 'abcdefg1234567'
 bcrypt = Bcrypt(app)
 
 database = Database()
-
-userNameCache = ExpiringDict(max_len=100, max_age_seconds=3600) # Caching usernames for 60 minutes
+localData = Data()
 
 
 def getDatabase():
@@ -32,24 +34,6 @@ def isXSSPossible(text):
         return True
     else:
         return False
-
-
-def getUserName(id):
-    if userNameCache.get(id) is None:
-        conn, cursor = getDatabase()
-        sql = f'select * from users where id = {id}'
-        cursor.execute(sql)
-        result = cursor.fetchone()
-
-        userName = result['username']
-
-        userNameCache[id] = userName
-
-        database.dbDisconnection()
-
-        return userName
-    else:
-        return userNameCache[id]
 
 
 @app.route('/')
@@ -79,7 +63,7 @@ def index():
         data_dic = {
             'id': obj['id'],
             'title': obj['title'],
-            'username': getUserName(obj['writer_id']),
+            'username': localData.getUserName(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
@@ -112,7 +96,7 @@ def board(id):
         data = {
             'title': result['title'],
             'text': result['text'],
-            'username': getUserName(result['writer_id']),
+            'username': localData.getUserName(result['writer_id']),
             'date': result['date'],
             'view_count': result['view_count'],
             'id': result['id']
@@ -126,7 +110,7 @@ def board(id):
 
         for obj in result:
             comments_dic = {
-                'writer': getUserName(obj['writer_id']),
+                'writer': localData.getUserName(obj['writer_id']),
                 'comment': obj['comment'],
                 'id': obj['id']
             }
@@ -325,119 +309,6 @@ def signOut():
     session.pop('userid', None)
     session.pop('id', None)
     return redirect(url_for('index'))
-
-
-# API part
-@app.route('/api')
-def api():
-    conn, cursor = getDatabase()
-    sql = 'select * from article;'
-
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    data_list = []
-
-    for obj in result:
-        data_dic = {
-            'id': obj['id'],
-            'title': obj['title'],
-            'username': obj['username'],
-            'date': obj['date']
-        }
-        data_list.append(data_dic)
-
-    database.dbDisconnection()
-
-    return jsonify(data_list)
-
-
-@app.route('/api/post')
-def apiPost():
-    conn, cursor = getDatabase()
-    sql = 'select * from article;'
-
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    data_list = []
-
-    for obj in result:
-        data_dic = {
-            'id': obj['id'],
-            'title': obj['title'],
-            'username': getUserName(obj['writer_id']),
-            'date': obj['date'],
-            'view_count': obj['view_count']
-        }
-        data_list.append(data_dic)
-
-    database.dbDisconnection()
-
-    return jsonify(data_list)
-
-
-@app.route('/api/<int:id>')
-def apiId(id):
-    conn, cursor = getDatabase()
-    sql = f'select * from article where id={id};'
-
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    data = {
-        'title': result['title'],
-        'text': result['text'],
-        'username': getUserName(result['writer_id']),
-        'date': result['date'],
-        'view_count': result['view_count']
-    }
-
-    database.dbDisconnection()
-
-    return jsonify(data)
-
-
-@app.route('/api/comments/<int:id>')
-def apiCommentId(id):
-    conn, cursor = getDatabase()
-    sql = f'select * from comments where article_id ={id};'
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    comments = []
-
-    for obj in result:
-        comments_dic = {
-            'writer': getUserName(obj['writer_id']),
-            'comment': obj['comment'],
-            'id': obj['id']
-        }
-        comments.append(comments_dic)
-
-    database.dbDisconnection()
-
-    return jsonify(comments)
-
-
-@app.route('/api/users')
-def apiUsers():
-    conn, cursor = getDatabase()
-    sql = f'select * from users;'
-
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    data = {
-        'id': result['id'],
-        'userid': result['userid'],
-        'username': getUserName(result['writer_id']),
-        'email': result['email']
-    }
-
-    database.dbDisconnection()
-
-    return jsonify(data)
 
 
 if __name__ == '__main__':
