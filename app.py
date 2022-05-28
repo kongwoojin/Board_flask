@@ -2,7 +2,7 @@
 import math
 from datetime import datetime
 
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 from flask_wtf.csrf import CSRFProtect
 from flask_bcrypt import Bcrypt
 
