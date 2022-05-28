@@ -18,7 +18,7 @@ def getDatabase():
 @blue_api.route('/')
 def api():
     conn, cursor = getDatabase()
-    sql = 'select * from article;'
+    sql = 'select * from article order by id desc;'
 
     cursor.execute(sql)
     result = cursor.fetchall()
