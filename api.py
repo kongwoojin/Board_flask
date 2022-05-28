@@ -30,30 +30,6 @@ def api():
             'id': obj['id'],
             'title': obj['title'],
             'username': localData.getUserName(obj['writer_id']),
-            'date': obj['date']
-        }
-        data_list.append(data_dic)
-
-    database.dbDisconnection()
-
-    return jsonify(data_list)
-
-
-@blue_api.route('/post/')
-def apiPost():
-    conn, cursor = getDatabase()
-    sql = 'select * from article;'
-
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    data_list = []
-
-    for obj in result:
-        data_dic = {
-            'id': obj['id'],
-            'title': obj['title'],
-            'username': localData.getUserName(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
