@@ -105,23 +105,3 @@ def apiCommentId(id):
     database.dbDisconnection()
 
     return jsonify(comments)
-
-
-@blue_api.route('/users/')
-def apiUsers():
-    conn, cursor = getDatabase()
-    sql = f'select * from users;'
-
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    data = {
-        'id': result['id'],
-        'userid': result['userid'],
-        'username': result['username'],
-        'email': result['email']
-    }
-
-    database.dbDisconnection()
-
-    return jsonify(data)
