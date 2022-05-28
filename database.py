@@ -21,7 +21,7 @@ class Database:
             self.conn.close()
 
     def getCursor(self):
-        if not self.conn.open:
+        if self.conn is None or not self.conn.open:
             self.dbConnection()
 
         return self.conn.cursor(pymysql.cursors.DictCursor)
