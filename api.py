@@ -4,20 +4,20 @@ from database import Database
 from local_data import Data
 
 database = Database()
-localData = Data()
-blue_api = Blueprint('api', __name__, url_prefix='/api')
+local_data = Data()
+api_blue_print = Blueprint('api', __name__, url_prefix='/api')
 
 
-def getDatabase():
-    conn = database.dbConnection()
-    cursor = database.getCursor()
+def get_database():
+    conn = database.db_connection()
+    cursor = database.get_cursor()
     return conn, cursor
 
 
 # API part
-@blue_api.route('/')
+@api_blue_print.route('/')
 def api():
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     sql = 'select * from article order by id desc;'
 
     cursor.execute(sql)
@@ -29,20 +29,20 @@ def api():
         data_dic = {
             'id': obj['id'],
             'title': obj['title'],
-            'username': localData.getUserName(obj['writer_id']),
+            'username': local_data.get_user_name(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
         data_list.append(data_dic)
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return jsonify(data_list)
 
 
-@blue_api.route('/<int:id>/')
+@api_blue_print.route('/<int:id>/')
 def apiId(id):
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     sql = f'select * from article where id={id};'
 
     cursor.execute(sql)
@@ -51,19 +51,19 @@ def apiId(id):
     data = {
         'title': result['title'],
         'text': result['text'],
-        'username': localData.getUserName(result['writer_id']),
+        'username': local_data.get_user_name(result['writer_id']),
         'date': result['date'],
         'view_count': result['view_count']
     }
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return jsonify(data)
 
 
-@blue_api.route('/comments/<int:id>/')
+@api_blue_print.route('/comments/<int:id>/')
 def apiCommentId(id):
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     sql = f'select * from comments where article_id ={id};'
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -72,12 +72,12 @@ def apiCommentId(id):
 
     for obj in result:
         comments_dic = {
-            'writer': localData.getUserName(obj['writer_id']),
+            'writer': local_data.get_user_name(obj['writer_id']),
             'comment': obj['comment'],
             'id': obj['id']
         }
         comments.append(comments_dic)
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return jsonify(comments)

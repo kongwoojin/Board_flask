@@ -5,7 +5,7 @@ class Database:
     def __init__(self):
         self.conn = None
 
-    def dbConnection(self):
+    def db_connection(self):
         self.conn = pymysql.connect(
             user='',
             passwd='',
@@ -16,12 +16,12 @@ class Database:
         )
         return self.conn
 
-    def dbDisconnection(self):
+    def db_disconnection(self):
         if self.conn.open:
             self.conn.close()
 
-    def getCursor(self):
+    def get_cursor(self):
         if self.conn is None or not self.conn.open:
-            self.dbConnection()
+            self.db_connection()
 
         return self.conn.cursor(pymysql.cursors.DictCursor)

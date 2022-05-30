@@ -14,22 +14,22 @@ from local_data import Data
 import api
 
 app = Flask(__name__)
-app.register_blueprint(api.blue_api)
+app.register_blueprint(api.api_blue_print)
 
 app.config['SECRET_KEY'] = 'abcdefg1234567'
 bcrypt = Bcrypt(app)
 
 database = Database()
-localData = Data()
+local_data = Data()
 
 
-def getDatabase():
-    conn = database.dbConnection()
-    cursor = database.getCursor()
+def get_database():
+    conn = database.db_connection()
+    cursor = database.get_cursor()
     return conn, cursor
 
 
-def isXSSPossible(text):
+def is_xss_possible(text):
     if "<script>" in text:
         return True
     else:
@@ -38,22 +38,22 @@ def isXSSPossible(text):
 
 @app.route('/')
 def index():
-    conn, cursor = getDatabase()
-    curPage = request.args.get('page')
-    if curPage is None:
-        curPage = 1
+    conn, cursor = get_database()
+    cur_page = request.args.get('page')
+    if cur_page is None:
+        cur_page = 1
     else:
-        curPage = int(curPage)
+        cur_page = int(cur_page)
 
-    articlePerPage = 15
+    article_per_page = 15
 
     sql = 'select count(*) from article;'
     cursor.execute(sql)
     result = cursor.fetchone()
-    rowCount = int(result['count(*)'])
-    pages = math.ceil(rowCount / articlePerPage)
+    row_count = int(result['count(*)'])
+    pages = math.ceil(row_count / article_per_page)
 
-    sql = f'select * from article order by id desc limit {(curPage - 1) * articlePerPage}, {articlePerPage};'
+    sql = f'select * from article order by id desc limit {(cur_page - 1) * article_per_page}, {article_per_page};'
     cursor.execute(sql)
     result = cursor.fetchall()
 
@@ -63,20 +63,20 @@ def index():
         data_dic = {
             'id': obj['id'],
             'title': obj['title'],
-            'username': localData.getUserName(obj['writer_id']),
+            'username': local_data.get_user_name(obj['writer_id']),
             'date': obj['date'],
             'view_count': obj['view_count']
         }
         data_list.append(data_dic)
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
-    return render_template('index.html', data_list=data_list, pages=pages, curPage=curPage)
+    return render_template('index.html', data_list=data_list, pages=pages, cur_page=cur_page)
 
 
 @app.route('/board/<id>', methods=['GET', 'POST'])
 def board(id):
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     form = CommentForm(request.form)
 
     if not form.is_submitted():
@@ -96,7 +96,7 @@ def board(id):
         data = {
             'title': result['title'],
             'text': result['text'],
-            'username': localData.getUserName(result['writer_id']),
+            'username': local_data.get_user_name(result['writer_id']),
             'date': result['date'],
             'view_count': result['view_count'],
             'id': result['id']
@@ -110,7 +110,7 @@ def board(id):
 
         for obj in result:
             comments_dic = {
-                'writer': localData.getUserName(obj['writer_id']),
+                'writer': local_data.get_user_name(obj['writer_id']),
                 'comment': obj['comment'],
                 'id': obj['id']
             }
@@ -131,14 +131,14 @@ def board(id):
                 conn.commit()
                 return redirect(url_for('board', id=id))
 
-        database.dbDisconnection()
+        database.db_disconnection()
 
         return render_template('board.html', data=data, comments=comments, form=form)
 
 
 @app.route('/write', methods=['GET', 'POST'])
 def write():
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     if session.get('userid') is None:
         flash("Login first!")
         return redirect(url_for('signIn'))
@@ -151,7 +151,7 @@ def write():
         writer_id = int(session['id'])
 
         now = datetime.now()
-        if isXSSPossible(text):
+        if is_xss_possible(text):
             flash("XSS detected!")
             return redirect(url_for('index'))
 
@@ -164,14 +164,14 @@ def write():
 
         return redirect(url_for('index'))
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return render_template('write.html', form=form)
 
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
     result = cursor.fetchone()
@@ -190,7 +190,7 @@ def edit(id):
         title = form.title.data
         text = form.text.data
 
-        if isXSSPossible(text):
+        if is_xss_possible(text):
             flash("XSS detected!")
             return redirect(url_for('index'))
 
@@ -212,14 +212,14 @@ def edit(id):
         form.title.data = data['title']
         form.text.data = data['text']
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return render_template('write.html', form=form)
 
 
 @app.route('/delete/<int:id>', methods=['GET'])
 def delete(id):
-    conn, cursor = getDatabase()
+    conn, cursor = get_database()
     sql = f'select * from article where id ={id};'
     cursor.execute(sql)
     result = cursor.fetchone()
@@ -233,13 +233,13 @@ def delete(id):
     conn.commit()
 
     flash("Deleted!")
-    database.dbDisconnection()
+    database.db_disconnection()
     return redirect(url_for('index'))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
-def signUp():
-    conn, cursor = getDatabase()
+def sign_up():
+    conn, cursor = get_database()
     form = SignUpForm(request.form)
     if form.validate_on_submit():
         userid = form.userid.data
@@ -247,12 +247,12 @@ def signUp():
         email = form.email.data
         password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
 
-        sqlForCheck = f'select * from users where userid = \'{userid}\';'
-        cursor.execute(sqlForCheck)
+        sql_for_check = f'select * from users where userid = \'{userid}\';'
+        cursor.execute(sql_for_check)
 
-        rowCount = cursor.rowcount
+        row_count = cursor.rowcount
 
-        if rowCount != 0:
+        if row_count != 0:
             flash("User Exist!")
             return redirect(url_for('signUp'))
 
@@ -267,14 +267,14 @@ def signUp():
             print(e[0])
             flash(e[0])
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return render_template('signup.html', form=form)
 
 
 @app.route('/signin', methods=['GET', 'POST'])
-def signIn():
-    conn, cursor = getDatabase()
+def sign_in():
+    conn, cursor = get_database()
     form = SignInForm(request.form)
     if form.validate_on_submit():
         userid = form.userid.data
@@ -298,13 +298,13 @@ def signIn():
             flash("Wrong password!")
             return redirect(url_for('signIn'))
 
-    database.dbDisconnection()
+    database.db_disconnection()
 
     return render_template('signin.html', form=form)
 
 
 @app.route('/signout')
-def signOut():
+def sign_out():
     session.pop('username', None)
     session.pop('userid', None)
     session.pop('id', None)

@@ -6,21 +6,21 @@ database = Database()
 
 class Data:
     def __init__(self):
-        self.userNameCache = ExpiringDict(max_len=100, max_age_seconds=3600)  # Caching usernames for 60 minutes
+        self.user_name_cache = ExpiringDict(max_len=100, max_age_seconds=3600)  # Caching usernames for 60 minutes
 
-    def getUserName(self, id):
-        if self.userNameCache.get(id) is None:
-            cursor = database.getCursor()
+    def get_user_name(self, id):
+        if self.user_name_cache.get(id) is None:
+            cursor = database.get_cursor()
             sql = f'select * from users where id = {id}'
             cursor.execute(sql)
             result = cursor.fetchone()
 
-            userName = result['username']
+            user_name = result['username']
 
-            self.userNameCache[id] = userName
+            self.user_name_cache[id] = user_name
 
-            database.dbDisconnection()
+            database.db_disconnection()
 
-            return userName
+            return user_name
         else:
-            return self.userNameCache[id]
+            return self.user_name_cache[id]
