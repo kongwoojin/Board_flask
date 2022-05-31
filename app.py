@@ -119,7 +119,7 @@ def board(id):
         if form.is_submitted() and form.validate_on_submit():
             if session.get('userid') is None:
                 flash("Login first!")
-                return redirect(url_for('signIn'))
+                return redirect(url_for('sign_in'))
             else:
                 comment = form.comment.data
                 writer_id = int(session['id'])
@@ -141,7 +141,7 @@ def write():
     conn, cursor = get_database()
     if session.get('userid') is None:
         flash("Login first!")
-        return redirect(url_for('signIn'))
+        return redirect(url_for('sign_in'))
 
     form = WriteForm(request.form)
 
@@ -254,14 +254,14 @@ def sign_up():
 
         if row_count != 0:
             flash("User Exist!")
-            return redirect(url_for('signUp'))
+            return redirect(url_for('sign_up'))
 
         sql = f'insert into users(userid, password, username, email) ' \
               f'values(\'{userid}\', \'{password}\', \'{username}\', \'{email}\')'
         cursor.execute(sql)
         conn.commit()
 
-        return redirect(url_for('signIn'))
+        return redirect(url_for('sign_in'))
     else:
         for e in form.errors.values():
             print(e[0])
@@ -286,7 +286,7 @@ def sign_in():
 
         if cursor.rowcount == 0:
             flash("Wrong username!")
-            return redirect(url_for('signIn'))
+            return redirect(url_for('sign_in'))
 
         if bcrypt.check_password_hash(result['password'], password):
             session['userid'] = userid
@@ -296,7 +296,7 @@ def sign_in():
             return redirect(url_for('index'))
         else:
             flash("Wrong password!")
-            return redirect(url_for('signIn'))
+            return redirect(url_for('sign_in'))
 
     database.db_disconnection()
 
