@@ -4,7 +4,16 @@ from database import Database
 database = Database()
 
 
-class Data:
+class Singleton:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls)
+        return cls._instance
+
+
+class Data(Singleton):
     def __init__(self):
         self.user_name_cache = ExpiringDict(max_len=100, max_age_seconds=3600)  # Caching usernames for 60 minutes
 
